@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "name": "Dale",
+    "age": 40,
+    "bookId": null
+  },
+  {
+    "id": 2,
+    "name": "Lev",
+    "age": 60,
+    "bookId": 2
+  },
+  {
+    "id": 3,
+    "name": "Stephen",
+    "age": 45,
+    "bookId": null
+  },
+  {
+    "id": 4,
+    "name": "Bruce",
+    "age": 35,
+    "bookId": null
+  },
+  {
+    "id": 5,
+    "name": "Alexander",
+    "age": 55,
+    "bookId": null
+  }
+]

@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "author": "Dale Carnegie",
+    "title": "How to stop worrying and start living",
+    "description": "Lecture",
+    "employeeId": null
+  },
+  {
+    "id": 2,
+    "author": "Lev Tolstoy",
+    "title": "War and Peace",
+    "description": "Novel",
+    "employeeId": 2
+  },
+  {
+    "id": 3,
+    "author": "Stephen King",
+    "title": "It",
+    "description": "Horror",
+    "employeeId": null
+  },
+  {
+    "id": 4,
+    "author": "Bruce Eckel",
+    "title": "Java Philosophy",
+    "description": "Educational literature",
+    "employeeId": null
+  },
+  {
+    "id": 5,
+    "author": "Alexander Pushkin",
+    "title": "Mermaid",
+    "description": "Poem",
+    "employeeId": null
+  }
+]
