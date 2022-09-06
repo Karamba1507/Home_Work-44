@@ -4,34 +4,39 @@
     "author": "Dale Carnegie",
     "title": "How to stop worrying and start living",
     "description": "Lecture",
-    "employeeId": null
+    "emplyeEmail": null,
+    "usageHistory" : []
   },
   {
     "id": 2,
     "author": "Lev Tolstoy",
     "title": "War and Peace",
     "description": "Novel",
-    "employeeId": 2
+    "emplyeEmail": null,
+    "usageHistory" : []
   },
   {
     "id": 3,
     "author": "Stephen King",
     "title": "It",
     "description": "Horror",
-    "employeeId": null
+    "emplyeEmail": null,
+    "usageHistory" : []
   },
   {
     "id": 4,
     "author": "Bruce Eckel",
     "title": "Java Philosophy",
     "description": "Educational literature",
-    "employeeId": null
+    "emplyeEmail": null,
+    "usageHistory" : []
   },
   {
     "id": 5,
     "author": "Alexander Pushkin",
     "title": "Mermaid",
     "description": "Poem",
-    "employeeId": null
+    "emplyeEmail": null,
+    "usageHistory" : []
   }
 ]

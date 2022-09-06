@@ -1,8 +1,9 @@
-package kz.attractor.java.lesson44;
+package FileService;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import kz.attractor.java.lesson44.SampleDataModel;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -10,11 +11,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class FileServiceBooks {
+public class FileServiceUser {
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    private static final Path path = Paths.get("./books.json");
+    private static final Path path = Paths.get("./user.json");
 
-    public List<Book> readString() {
+    private void readString() {
         String json;
         try {
             json = Files.readString(path);
@@ -22,6 +23,12 @@ public class FileServiceBooks {
             throw new RuntimeException(e);
         }
 
-        return gson.fromJson(json, new TypeToken<List<Book>>(){}.getType());
+        gson.fromJson(json, new TypeToken<List<SampleDataModel.User>>() {
+        }.getType());
+    }
+
+    public static void main(String[] args) {
+        FileServiceUser fs = new FileServiceUser();
+        fs.readString();
     }
 }

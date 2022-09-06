@@ -1,23 +1,20 @@
 package kz.attractor.java.lesson44;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class Book {
+public class UserBook {
     private int id;
     private String author;
     private String title;
     private String description;
     private String emplyeEmail;
-    private List<String> usageHistory = new ArrayList<>();
+    private boolean userHandling;
 
-
-
-    public Book(int id, String author, String title, String description) {
+    public UserBook(int id, String author, String title, String description, String emplyeEmail, boolean userHandling) {
         this.id = id;
         this.author = author;
         this.title = title;
         this.description = description;
+        this.emplyeEmail = emplyeEmail;
+        this.userHandling = userHandling;
     }
 
     public int getId() {
@@ -60,21 +57,11 @@ public class Book {
         this.emplyeEmail = emplyeEmail;
     }
 
-    public List<String> getUsageHistory() {
-        return usageHistory;
+    public boolean isUserHandling() {
+        return userHandling;
     }
 
-    public void setUsageHistory(List<String> usageHistory) {
-        this.usageHistory = usageHistory;
-    }
-
-    @Override
-    public String toString() {
-        return "Books{" +
-                "id=" + id +
-                ", author='" + author + '\'' +
-                ", title='" + title + '\'' +
-                ", description='" + description + '\'' +
-                + '\n';
+    public void setUserHandling(boolean userHandling) {
+        this.userHandling = userHandling;
     }
 }

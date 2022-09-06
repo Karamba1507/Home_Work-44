@@ -3,12 +3,18 @@ package kz.attractor.java.server;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public abstract class BasicServer {
 
@@ -40,6 +46,10 @@ public abstract class BasicServer {
         exchange.getResponseHeaders().set("Content-Type", String.valueOf(type));
     }
 
+    protected static String getContentType(HttpExchange exchange) {
+        return exchange.getResponseHeaders().getOrDefault("Content-Type", List.of("")).get(0);
+    }
+
     private static HttpServer createServer(String host, int port) throws IOException {
         var msg = "Starting server on http://%s:%s/%n";
         System.out.printf(msg, host, port);
@@ -58,7 +68,7 @@ public abstract class BasicServer {
         // обработчик для корневого запроса
         // именно этот обработчик отвечает что отображать,
         // когда пользователь запрашивает localhost:9889
-        registerGet("/", exchange -> sendFile(exchange, makeFilePath("index.html"), ContentType.TEXT_HTML));
+        loginGet("/", exchange -> sendFile(exchange, makeFilePath("login.html"), ContentType.TEXT_HTML));
 
         // эти обрабатывают запросы с указанными расширениями
         registerFileHandler(".css", ContentType.TEXT_CSS);
@@ -68,16 +78,44 @@ public abstract class BasicServer {
 
     }
 
-    protected final void registerGet(String route, RouteHandler handler) {
+    protected final void getProfile(String route, RouteHandler handler) {
+        getRoutes().put("Get " + route, handler);
+    }
+
+    protected final void getHandler(String route, RouteHandler handler) {
         getRoutes().put("GET " + route, handler);
     }
 
+    protected final void postHandler(String route, RouteHandler handler) {
+        getRoutes().put("POST " + route, handler);
+    }
+
+    protected final void loginGet(String route, RouteHandler handler) {
+        getRoutes().put("GET " + route, handler);
+    }
+
+    protected final void loginPost(String route, RouteHandler handler) {
+        getRoutes().put("POST " + route, handler);
+    }
+
     protected final void registerFileHandler(String fileExt, ContentType type) {
-        registerGet(fileExt, exchange -> sendFile(exchange, makeFilePath(exchange), type));
+        loginGet(fileExt, exchange -> sendFile(exchange, makeFilePath(exchange), type));
     }
 
     protected final Map<String, RouteHandler> getRoutes() {
         return routes;
+    }
+
+    protected final String getBody(HttpExchange exchange) {
+        InputStream input = exchange.getRequestBody();
+        InputStreamReader isr = new InputStreamReader(input, StandardCharsets.UTF_8);
+
+        try (BufferedReader reader = new BufferedReader(isr)) {
+            return reader.lines().collect(Collectors.joining(""));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 
     protected final void sendFile(HttpExchange exchange, Path pathToFile, ContentType contentType) {
@@ -120,6 +158,16 @@ public abstract class BasicServer {
         }
     }
 
+    protected final void redirect303(HttpExchange exchange, String path) {
+        try {
+            exchange.getResponseHeaders().add("Location", path);
+            exchange.sendResponseHeaders(303, 0);
+            exchange.getResponseBody().close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void handleIncomingServerRequests(HttpExchange exchange) {
         var route = getRoutes().getOrDefault(makeKey(exchange), this::respond404);
         route.handle(exchange);
@@ -127,5 +175,14 @@ public abstract class BasicServer {
 
     public final void start() {
         server.start();
+    }
+
+    protected String getCookies(HttpExchange exchange) {
+        String cookie = exchange.getRequestHeaders().getOrDefault("Cookie", List.of("")).get(0);
+        return cookie;
+    }
+
+    protected void setCookie(HttpExchange exchange, Cookie cookie) {
+        exchange.getResponseHeaders().add("Set-Cookie", cookie.toString());
     }
 }

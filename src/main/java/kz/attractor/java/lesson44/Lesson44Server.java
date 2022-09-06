@@ -6,12 +6,20 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 //import javafx.util.Pair;
+import jdk.jshell.execution.Util;
 import kz.attractor.java.server.BasicServer;
 import kz.attractor.java.server.ContentType;
 import kz.attractor.java.server.ResponseCodes;
+import kz.attractor.java.server.Utils;
 
 import java.io.*;
-import java.util.List;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
+import java.nio.file.Path;
+import java.util.Map;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static kz.attractor.java.lesson44.Lesson45Server.users;
 
 public class Lesson44Server extends BasicServer {
     private final static Configuration freemarker = initFreeMarker();
@@ -21,15 +29,18 @@ public class Lesson44Server extends BasicServer {
 
     public Lesson44Server(String host, int port) throws IOException {
         super(host, port);
-        registerGet("/sample", this::freemarkerSampleHandler);
+        loginGet("/sample", this::freemarkerSampleHandler);
 
-        registerGet("/test", this::testHandler);
+        loginGet("/test", this::testHandler);
 
-        registerGet("/books", this::booksHandler);
+        loginGet("/books", this::booksHandler);
 
-        registerGet("/getBook", this::getBookHandler);
+        loginGet("/getBook", this::getBookHandler);
 
-        registerGet("/emp", this::emtHandler);
+        loginGet("/returnBook", this::returnBook);
+
+
+//        loginGet("/emp", this::emtHandler);
     }
 
     private static Configuration initFreeMarker() {
@@ -62,7 +73,67 @@ public class Lesson44Server extends BasicServer {
     }
 
     private void booksHandler(HttpExchange exchange) {
-        renderTemplate(exchange, "books.html", books);
+
+        User autorisedUser = userValidate(exchange);
+
+        if (autorisedUser != null) {
+
+            UserBooks books = new UserBooks();
+
+            for (Book book : this.books.getBooks()) {
+                boolean isHandle = book.getEmplyeEmail() != null && book.getEmplyeEmail().equals(autorisedUser.getEmail());
+                UserBook userBook = new UserBook(book.getId(), book.getAuthor(), book.getTitle(), book.getDescription(), book.getEmplyeEmail(), isHandle);
+                books.getBooks().add(userBook);
+            }
+
+            renderTemplate(exchange, "books.html", books);
+        } else {
+            Path path = makeFilePath("loginError.html");
+            sendFile(exchange, path, ContentType.TEXT_HTML);
+        }
+    }
+
+    private User userValidate(HttpExchange exchange) {
+
+        String cookieId = getCookieFromUser(exchange, "cookieId");
+        String userEmail = getCookieFromUser(exchange, "email");
+
+        User autorisedUser = null;
+
+        for (User user : users.getUsers()) {
+            if (user.getEmail().equals(userEmail)) {
+                if (user.getCookieId() != null && user.getCookieId().equals(cookieId)) {
+                    autorisedUser = user;
+                }
+                break;
+            }
+        }
+
+        return autorisedUser;
+    }
+
+    private String getCookieFromUser(HttpExchange exchange, String key) {
+
+        String cookies = getCookies(exchange);
+
+        String decode = URLDecoder.decode(cookies, UTF_8);
+
+        String result = "";
+
+        String[] split = decode.split(";");
+        for (String s : split) {
+            if (s.contains(key)) {
+                result = s.split("=")[1].trim();
+            }
+        }
+
+        return result;
+    }
+
+    private User findAutorisedUser(HttpExchange exchange) {
+        String cookies = getCookies(exchange);
+
+        return null;
     }
 
     private void emtHandler(HttpExchange exchange) {
@@ -71,6 +142,20 @@ public class Lesson44Server extends BasicServer {
     }
 
     private void getBookHandler(HttpExchange exchange) {
+
+        User autorizedUser = userValidate(exchange);
+
+        if (autorizedUser == null) {
+            Path path = makeFilePath("loginError.html");
+            sendFile(exchange, path, ContentType.TEXT_HTML);
+            return;
+        }
+
+        if (autorizedUser.getBookIds().size() > 1) {
+            Path path = makeFilePath("failedGetBook.html");
+            sendFile(exchange, path, ContentType.TEXT_HTML);
+            return;
+        }
 
         String params = exchange.getRequestURI().getQuery();
 
@@ -89,16 +174,63 @@ public class Lesson44Server extends BasicServer {
         String text;
 
         assert book != null;
-        if (book.getEmployeeId() == null ) {
+        if (book.getEmplyeEmail() == null ) {
+
             text = "Tou successful get the book " + book.getTitle();
 
-            book.setEmployeeId(5);
+            book.setEmplyeEmail(autorizedUser.getEmail());
+            book.getUsageHistory().add(autorizedUser.getEmail());
+
+            for (User user : users.getUsers()) {
+                if (user.getEmail().equals(autorizedUser.getEmail())) {
+                    user.getBookIds().add(book.getId());
+                    break;
+                }
+            }
 
         } else {
             text = "The book is not available";
         }
 
         renderTemplate(exchange, "getBooks.html", new Message(text));
+    }
+
+    private void returnBook(HttpExchange exchange) {
+
+        User autorizedUser = userValidate(exchange);
+
+        if (autorizedUser == null) {
+            Path path = makeFilePath("loginError.html");
+            sendFile(exchange, path, ContentType.TEXT_HTML);
+            return;
+        }
+
+        String params = exchange.getRequestURI().getQuery();
+
+        // Получаем id из запроса
+        String bookId = params.split("=")[1];
+
+        Book book = null;
+
+        for (Book book1 : books.getBooks()) {
+            if (book1.getId() == Integer.parseInt(bookId)) {
+                book = book1;
+                book1.setEmplyeEmail(null);
+                break;
+            }
+        }
+
+        for (User user : users.getUsers()) {
+
+            if (user.getEmail().equals(autorizedUser.getEmail())) {
+                user.getBookIds().remove((Object) Integer.parseInt(bookId));
+                break;
+            }
+        }
+
+        String text = "You return the book " + book.getTitle();
+
+        renderTemplate(exchange, "returnBook.html", new Message(text));
     }
 
     protected void renderTemplate(HttpExchange exchange, String templateFile, Object dataModel) {

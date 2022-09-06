@@ -16,16 +16,20 @@
 
 <div>
 
-<h3>Our library contains the following books:</h3>
 
 <#list books as book>
     <h1>${book.id}</h1>
     <p>${book.author}</p>
     <p>${book.description}</p>
-<p>${book.title?upper_case}  <a href="http://localhost:9889/getBook?id=${book.id}">get book</a>  </p>
+<p>${book.title?upper_case}  <a href="http://localhost:4444/getBook?id=${book.id}">get book</a> |
+    <#if book.userHandling>
+    <a href="http://localhost:4444/returnBook?id=${book.id}">Return book</a>
+</#if> </p>
 </#list>
 
 </div>
+
+<p> <a href="http://localhost:4444/logout">LOGOUT</a> </p>
 
 </body>
 
